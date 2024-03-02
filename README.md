@@ -12,7 +12,7 @@ This is a CI-V Connector for Wavelog that can be running on an ESP32 developer b
 * 1x 10k resistor
 
 ## Wiring schedule
-Still to be done
+[Schematics.pdf](/Documents/Schematics.pdf)
 
 ## Features
 This connects via CI-V to your Icom Transceiver (e.g. IC-7300) on the 3,5 mm jack plug port.
