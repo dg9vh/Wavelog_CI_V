@@ -24,6 +24,9 @@ From there it reads following measurements:
 This values are transported to the radio hardware API of Wavelog (Cloudlog also works) and
 there this data can be used for logging purpose.
 
+Also this CI-V Connector is presenting a rudimentary XML-RPC service on port 12345 to be used by 
+CloudLogOffline by DL9MJ - you will find this at https://github.com/myzinsky/cloudLogOffline
+
 ## Prerequisites
 To have this working properly, you need to have your transceiver in "transceive = on"-mode for 
 CI-V. Also it should be configured for 19200 baud on the serial output (not on USB-port!).
