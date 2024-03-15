@@ -1,4 +1,5 @@
 # Wavelog_CI_V
+![image of configuration dialog on ESP32-webserver](https://github.com/dg9vh/Wavelog_CI_V/assets/13950650/27089ca5-64ad-4599-97f2-749915e2f707)
 
 ## Introduction
 This is a CI-V Connector for Wavelog that can be running on an ESP32 developer board.
