@@ -256,6 +256,7 @@ void handleRoot() {
   html += ".container { max-width: 400px; margin: 0 auto; padding: 20px; }";
   html += "input[type='text'] { width: 100%; padding: 10px; margin: 5px 0; }";
   html += "input[type='submit'] { width: 100%; padding: 10px; margin-top: 10px; background-color: #4CAF50; color: white; border: none; }";
+  html += ".btn-reboot { width: 100%; padding: 10px; margin-top: 10px; background-color: #FF0000; color: white; border: none; }";
   html += "input[type='submit']:hover { background-color: #45a049; }";
   html += "</style>";
   html += "</head>";
@@ -285,24 +286,12 @@ void handleRoot() {
   html += ">IC-7000 (70h)</option>";
   html += "<option value='5'";
   html += (params[3] == "5" ? " selected" : "");
-  html += ">IC-7410</option>";
-  case 1:
-      Serial2.write(0x94);
-      break;
-    case 2:
-      Serial2.write(0x76);
-      break;
-    case 3:
-      Serial2.write(0x88);
-      break;
-    case 4:
-      Serial2.write(0x70);
-      break;
-    case 5:
-      Serial2.write(0x80);
-      break;
+  html += ">IC-7410 (80h)</option>";
   html += "</select><br>";
   html += "<input type='submit' value='Save'>";
+  html += "</form>";
+  html += "<form action='/reboot' method='post'>";
+  html += "<button type='submit' class='btn-reboot'>Reboot ESP32</button>";
   html += "</form>";
   html += "</div>";
   html += "</body>";
@@ -345,6 +334,10 @@ void handleSave() {
 
   server.sendHeader("Location", "/", true);
   server.send(302, "text/plain", "");
+}
+
+void handleReboot() {
+    ESP.restart();
 }
 
 String rig_get_vfo() {
@@ -398,6 +391,7 @@ void setup() {
 
   server.on("/", handleRoot);
   server.on("/save", handleSave);
+  server.on("/reboot", handleReboot);
   server.begin();
   Serial.println("HTTP server started");
 
@@ -458,5 +452,6 @@ void loop() {
     }
   } else {
     Serial.println(F("No connection to your WiFi-network."));
+    connectToWifi();
   }
 } // end loop
