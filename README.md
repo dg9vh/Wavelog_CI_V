@@ -12,6 +12,10 @@ This is a CI-V Connector for Wavelog that can be running on an ESP32 developer b
 * 1x 4k7 resistor
 * 1x 10k resistor
 
+![How a prototype of a pcb with ESP32 can look like](https://github.com/dg9vh/Wavelog_CI_V/assets/13950650/b69d722d-725e-41cc-ac18-d5fdcf4bf325)
+
+On the image above you see a prototype built on a perforated grid circuit board.
+
 ## Wiring schedule
 [Schematics.pdf](/Documents/Schematics.pdf)
 
