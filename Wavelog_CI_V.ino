@@ -273,19 +273,34 @@ void handleRoot() {
   html += "<select id='TrxAddress' name='TrxAddress'>";
   html += "<option value='1'";
   html += (params[3] == "1" ? " selected" : "");
-  html += ">IC-7300</option>";
+  html += ">IC-7300 (94h)</option>";
   html += "<option value='2'";
   html += (params[3] == "2" ? " selected" : "");
-  html += ">IC-7200</option>";
+  html += ">IC-7200 (76h)</option>";
   html += "<option value='3'";
   html += (params[3] == "3" ? " selected" : "");
-  html += ">IC-7100</option>";
+  html += ">IC-7100 (88h)</option>";
   html += "<option value='4'";
   html += (params[3] == "4" ? " selected" : "");
-  html += ">IC-7000</option>";
+  html += ">IC-7000 (70h)</option>";
   html += "<option value='5'";
   html += (params[3] == "5" ? " selected" : "");
   html += ">IC-7410</option>";
+  case 1:
+      Serial2.write(0x94);
+      break;
+    case 2:
+      Serial2.write(0x76);
+      break;
+    case 3:
+      Serial2.write(0x88);
+      break;
+    case 4:
+      Serial2.write(0x70);
+      break;
+    case 5:
+      Serial2.write(0x80);
+      break;
   html += "</select><br>";
   html += "<input type='submit' value='Save'>";
   html += "</form>";
