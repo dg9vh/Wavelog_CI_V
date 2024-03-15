@@ -3,10 +3,12 @@
 #include <WiFiManager.h>
 #include <WebServer.h>
 #include <SPIFFS.h>
+#include <ESPmDNS.h>
 
 const int numParams = 4; // number of  parameters
 String params[numParams] = {"", "", "", ""}; // initialization of parameters
 WebServer server(80);
+WebServer XMLRPCserver(12345);
 
 unsigned long time_current_baseloop;
 unsigned long time_last_baseloop;
@@ -62,7 +64,23 @@ void sendCIVQuery(const uint8_t *commands, size_t length) {
   newData2 = false;
   Serial2.write(startMarker);  // always twice 0xFE in the beginning
   Serial2.write(startMarker);
-  Serial2.write(params[4].toInt()); // this is the CI-V Address of our transceiver
+  switch (params[3].toInt()) {
+    case 1:
+      Serial2.write(0x94);
+      break;
+    case 2:
+      Serial2.write(0x76);
+      break;
+    case 3:
+      Serial2.write(0x88);
+      break;
+    case 4:
+      Serial2.write(0x70);
+      break;
+    case 5:
+      Serial2.write(0x80);
+      break;
+  }
   Serial2.write(TERM_address);
   Serial2.write(commands, length);
   Serial2.write(endMarker);
@@ -160,7 +178,7 @@ void processReceivedData(void) {
   }
   Serial.println();
     
-  if ((receivedData[0] == 0x00 || receivedData[0] == 0xE0) && receivedData[1] == params[4].toInt()) { // broadcast to all (0x00), reply to terminal (0xE0)
+  if ((receivedData[0] == 0x00 || receivedData[0] == 0xE0)) { // broadcast to all (0x00), reply to terminal (0xE0)
     switch(receivedData[2]) {
       case 0x0: { // reply at broadcast
         calculateQRG();
@@ -252,7 +270,23 @@ void handleRoot() {
   html += "<label for='wavelogApiKey'>Wavelog API Key:</label><br>";
   html += "<input type='text' id='wavelogApiKey' name='wavelogApiKey' value='" + params[2] + "'><br>";
   html += "<label for='TrxAddress'>Trx Address:</label><br>";
-  html += "<input type='text' id='TrxAddress' name='TrxAddress' value='" + params[3] + "'><br>";
+  html += "<select id='TrxAddress' name='TrxAddress'>";
+  html += "<option value='1'";
+  html += (params[3] == "1" ? " selected" : "");
+  html += ">IC-7300</option>";
+  html += "<option value='2'";
+  html += (params[3] == "2" ? " selected" : "");
+  html += ">IC-7200</option>";
+  html += "<option value='3'";
+  html += (params[3] == "3" ? " selected" : "");
+  html += ">IC-7100</option>";
+  html += "<option value='4'";
+  html += (params[3] == "4" ? " selected" : "");
+  html += ">IC-7000</option>";
+  html += "<option value='5'";
+  html += (params[3] == "5" ? " selected" : "");
+  html += ">IC-7410</option>";
+  html += "</select><br>";
   html += "<input type='submit' value='Save'>";
   html += "</form>";
   html += "</div>";
@@ -298,12 +332,34 @@ void handleSave() {
   server.send(302, "text/plain", "");
 }
 
+String rig_get_vfo() {
+  return String(frequency);
+}
+
+String rig_get_mode() {
+  return mode_str;
+}
+
+void handleRPC() {
+  // processing XML-RPC-request
+  if (XMLRPCserver.arg(0).indexOf("<methodName>rig.get_vfo</methodName>") != -1) {
+    String response = rig_get_vfo();
+    XMLRPCserver.send(200, "text/xml", "<methodResponse><params><param><value>" + response + "</value></param></params></methodResponse>");
+  } else if (XMLRPCserver.arg(0).indexOf("<methodName>rig.get_mode</methodName>") != -1) {
+    String response = rig_get_mode();
+    XMLRPCserver.send(200, "text/xml", "<methodResponse><params><param><value>" + response + "</value></param></params></methodResponse>");
+  } else {
+    XMLRPCserver.send(400, "text/plain", "Unknown method");
+  }
+}
+
 void setup() {
   Serial.begin(115200);  // Serial console
   Serial2.begin(19200, SERIAL_8N1, 16, 17);  // ICOM CI-V
   delay(1000);
   Serial.println(F(""));
   Serial.println(F("Booting Sketch..."));
+  MDNS.begin("esp32-ci-v");
 
   if (!SPIFFS.begin(true)) {
     Serial.println("SPIFFS initialization failed!");
@@ -330,20 +386,27 @@ void setup() {
   server.begin();
   Serial.println("HTTP server started");
 
+  // Routing for XML-RPC-requests
+  XMLRPCserver.on("/", handleRPC);
+  XMLRPCserver.begin();
+  Serial.println("XMLRPCserver started");
+
   delay(1000);
   time_current_baseloop = millis();
   time_last_baseloop = time_current_baseloop;
 
   if (params[0].length() > 0) {
     getmode();
-    if (params[4].toInt() >= 1) geticomdata();
+    if (params[3].toInt() >= 1) 
+      geticomdata();
     if (newData2) {
       processReceivedData();
     }
     newData2 = false;
     delay(1000);
     getqrg();
-    if (params[4].toInt() >= 1) geticomdata();
+    if (params[3].toInt() >= 1) 
+      geticomdata();
     if (newData2) {
       processReceivedData();
     }
@@ -355,6 +418,7 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  XMLRPCserver.handleClient();
   if (WiFi.status() == WL_CONNECTED) {
     time_current_baseloop = millis();
 
@@ -364,7 +428,8 @@ void loop() {
       time_last_baseloop = time_current_baseloop;
     }
     
-    if (params[4].toInt() >= 1) geticomdata();
+    if (params[3].toInt() >= 1) 
+      geticomdata();
     if (newData2) {
       processReceivedData();
     }
