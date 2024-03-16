@@ -26,6 +26,23 @@ String old_mode_str = "";
 const byte TERM_address(0xE0); // Identifies the terminal (ESP32)
 const byte startMarker = 0xFE;  // Indicates where the icom signal string starts
 const byte endMarker = 0xFD;    // Indicates where the icom signal string ends
+
+ const char* civ_options[][2] = { // List of names for select-options in config-page
+    {"0", "IC-7300 (94h)"},
+    {"1", "IC-7200 (76h)"},
+    {"2", "IC-7100 (88h)"},
+    {"3", "IC-7000 (70h)"},
+    {"4", "IC-7410 (80h)"}
+  };
+
+const byte civ_addresses[] = { // corresponding list of CI-V-Adresses to list above
+    0x94,
+    0x76,
+    0x88,
+    0x70,
+    0x80
+  };
+
 const int maxDataLength = 16;
 byte receivedData[maxDataLength];  // Array for the recieved data bytes
 int dataIndex = 0;                 // Pointer into the data array
@@ -64,26 +81,11 @@ void sendCIVQuery(const uint8_t *commands, size_t length) {
   newData2 = false;
   Serial2.write(startMarker);  // always twice 0xFE in the beginning
   Serial2.write(startMarker);
-  switch (params[3].toInt()) {
-    case 1:
-      Serial2.write(0x94);
-      break;
-    case 2:
-      Serial2.write(0x76);
-      break;
-    case 3:
-      Serial2.write(0x88);
-      break;
-    case 4:
-      Serial2.write(0x70);
-      break;
-    case 5:
-      Serial2.write(0x80);
-      break;
-  }
+  Serial2.write(civ_addresses[params[3].toInt()]);
   Serial2.write(TERM_address);
   Serial2.write(commands, length);
   Serial2.write(endMarker);
+
   Serial.println(F("Query sent"));
 }
 
@@ -206,7 +208,7 @@ void processReceivedData(void) {
 
 void create_json(unsigned long frequency, String mode, float power) {  
   jsonDoc.clear();  
-  jsonDoc["radio"] = "IC-7300 Wavelog CI-V";
+  jsonDoc["radio"] = String(civ_options[params[3].toInt()][1]) + " Wavelog CI-V";
   jsonDoc["frequency"] = frequency;
   jsonDoc["mode"] = mode;
   jsonDoc["power"] = power;
@@ -272,21 +274,14 @@ void handleRoot() {
   html += "<input type='text' id='wavelogApiKey' name='wavelogApiKey' value='" + params[2] + "'><br>";
   html += "<label for='TrxAddress'>Trx Address:</label><br>";
   html += "<select id='TrxAddress' name='TrxAddress'>";
-  html += "<option value='1'";
-  html += (params[3] == "1" ? " selected" : "");
-  html += ">IC-7300 (94h)</option>";
-  html += "<option value='2'";
-  html += (params[3] == "2" ? " selected" : "");
-  html += ">IC-7200 (76h)</option>";
-  html += "<option value='3'";
-  html += (params[3] == "3" ? " selected" : "");
-  html += ">IC-7100 (88h)</option>";
-  html += "<option value='4'";
-  html += (params[3] == "4" ? " selected" : "");
-  html += ">IC-7000 (70h)</option>";
-  html += "<option value='5'";
-  html += (params[3] == "5" ? " selected" : "");
-  html += ">IC-7410 (80h)</option>";
+
+  for (int i = 0; i < sizeof(civ_options) / sizeof(civ_options[0]); ++i) {
+    String optionHTML = "<option value='" + String(civ_options[i][0]) + "'";
+    optionHTML += (params[3].toInt() == atoi(civ_options[i][0]) ? " selected" : "");
+    optionHTML += ">" + String(civ_options[i][1]) + "</option>";
+    html += optionHTML;
+  }
+
   html += "</select><br>";
   html += "<input type='submit' value='Save'>";
   html += "</form>";
@@ -406,7 +401,7 @@ void setup() {
 
   if (params[0].length() > 0) {
     getmode();
-    if (params[3].toInt() >= 1) 
+    if (params[3].toInt() >= 0) 
       geticomdata();
     if (newData2) {
       processReceivedData();
@@ -414,7 +409,7 @@ void setup() {
     newData2 = false;
     delay(1000);
     getqrg();
-    if (params[3].toInt() >= 1) 
+    if (params[3].toInt() >= 0) 
       geticomdata();
     if (newData2) {
       processReceivedData();
@@ -437,7 +432,7 @@ void loop() {
       time_last_baseloop = time_current_baseloop;
     }
     
-    if (params[3].toInt() >= 1) 
+    if (params[3].toInt() >= 0) 
       geticomdata();
     if (newData2) {
       processReceivedData();
