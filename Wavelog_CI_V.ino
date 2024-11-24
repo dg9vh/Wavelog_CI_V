@@ -32,7 +32,9 @@ const byte endMarker = 0xFD;    // Indicates where the icom signal string ends
     {"1", "IC-7200 (76h)"},
     {"2", "IC-7100 (88h)"},
     {"3", "IC-7000 (70h)"},
-    {"4", "IC-7410 (80h)"}
+    {"4", "IC-7410 (80h)"},
+    {"5", "IC-9100 (7Ch)"},
+    {"6", "IC-9700 (A2h)"}
   };
 
 const byte civ_addresses[] = { // corresponding list of CI-V-Adresses to list above
@@ -40,7 +42,9 @@ const byte civ_addresses[] = { // corresponding list of CI-V-Adresses to list ab
     0x76,
     0x88,
     0x70,
-    0x80
+    0x80,
+    0x7C,
+    0xA2
   };
 
 const int maxDataLength = 16;
@@ -139,6 +143,7 @@ void calculateQRG() {
 void calculateMode() {
   uint8_t mode_int = receivedData[3];
   switch (mode_int) {
+    // Abbildung erfolgt gemäß der ADIF-Modes, daher z.B. CW und CW-R als CW, ebenso RTTY und RTTY-R
     case 0:
       mode_str = "LSB";
       break;
@@ -158,13 +163,16 @@ void calculateMode() {
       mode_str = "FM";
       break;
     case 6:
-      mode_str = "WFM";
+      mode_str = "FM";
       break;
     case 7:
       mode_str = "CW";
       break;
     case 8:
       mode_str = "RTTY";
+      break;
+    case 17:
+      mode_str = "DSTAR";
       break;
   }
 }
