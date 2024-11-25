@@ -171,7 +171,7 @@ void calculateMode() {
     case 8:
       mode_str = "RTTY";
       break;
-    case 17:
+    case 23:
       mode_str = "DSTAR";
       break;
   }
