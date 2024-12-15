@@ -34,7 +34,8 @@ const byte endMarker = 0xFD;    // Indicates where the icom signal string ends
     {"3", "IC-7000 (70h)"},
     {"4", "IC-7410 (80h)"},
     {"5", "IC-9100 (7Ch)"},
-    {"6", "IC-9700 (A2h)"}
+    {"6", "IC-9700 (A2h)"},
+    {"7", "ID-5100 (8Ch)"}
   };
 
 const byte civ_addresses[] = { // corresponding list of CI-V-Adresses to list above
@@ -44,7 +45,8 @@ const byte civ_addresses[] = { // corresponding list of CI-V-Adresses to list ab
     0x70,
     0x80,
     0x7C,
-    0xA2
+    0xA2,
+    0x8C
   };
 
 const int maxDataLength = 16;
