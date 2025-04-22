@@ -12,7 +12,9 @@ WebServer XMLRPCserver(12345);
 
 unsigned long time_current_baseloop;
 unsigned long time_last_baseloop;
+unsigned long time_last_update;
 #define BASELOOP_TICK 5000 // = 5 seconds
+#define DEBOUNCE_TIME 1500 // = 1,5sec. process ONLY if TRX has settled
 
 unsigned long frequency = 0;
 float power = 0.0;
@@ -445,12 +447,13 @@ void loop() {
     if (params[3].toInt() >= 0) 
       geticomdata();
     if (newData2) {
+      time_last_update = millis();
       processReceivedData();
     }
     newData2 = false;
   
     delay(10); 
-    if ( mode_str != old_mode_str || frequency != old_frequency || power != old_power) {
+    if (( mode_str != old_mode_str || frequency != old_frequency || power != old_power) && ((time_current_baseloop-time_last_update)>DEBOUNCE_TIME)) {
       // send json to server
       create_json(frequency, mode_str, power);
       post_json();
