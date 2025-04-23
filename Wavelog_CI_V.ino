@@ -258,6 +258,14 @@ void post_json() {
     http.end(); 
 }
 
+void handleTrx() {
+  jsonDoc.clear();  
+  jsonDoc["qrg"] = frequency;
+  jsonDoc["mode"] = mode_str;
+  serializeJson(jsonDoc, buffer);
+  server.send(200, "application/json", buffer);
+}
+
 void handleRoot() {
   String html = "<!DOCTYPE html>";
   html += "<html>";
@@ -277,6 +285,7 @@ void handleRoot() {
   html += "<body>";
   html += "<div class=\"container\">";
   html += "<h1>ESP32 Wavelog CI-V Configuration</h1>";
+  html += "<p>Current QRG/Mode from CI-V:&nbsp;<span id='qrg'></span>&nbsp;/&nbsp;<span id='mode'></span></p>";
   html += "<form action='/save' method='post'>";
   html += "<label for='wavelogUrl'>Wavelog URL:</label><br>";
   html += "<input type='text' id='wavelogUrl' name='wavelogUrl' value='" + params[0] + "'><br>";
@@ -301,8 +310,21 @@ void handleRoot() {
   html += "<button type='submit' class='btn-reboot'>Reboot ESP32</button>";
   html += "</form>";
   html += "</div>";
-  html += "</body>";
-  html += "</html>";
+  html += "<script>";
+  html += R"JS(
+setInterval(function() {
+  fetch('/trx')
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('qrg').textContent = (data.qrg/1000)+'kHz';
+      document.getElementById('mode').textContent = data.mode;
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+    });
+}, 1000);
+)JS";
+  html += "</script></body></html>";
 
   server.send(200, "text/html", html);
 }
@@ -397,6 +419,7 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   server.on("/", handleRoot);
+  server.on("/trx", handleTrx);
   server.on("/save", handleSave);
   server.on("/reboot", handleReboot);
   server.begin();
